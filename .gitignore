@@ -31,5 +31,5 @@
 *.out
 *.app
 /.vs
-/x64/Debug
-/Example/x64/Debug
+/x64
+/Example/x64
