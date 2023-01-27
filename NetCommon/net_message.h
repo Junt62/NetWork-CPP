@@ -20,7 +20,7 @@ namespace olc {
 
 
             // Returns size of entire message packet in bytes.
-            stze_t size() const {
+            size_t size() const {
 
                 return sizeof(message_header<T>) + body.size();
             }
@@ -78,6 +78,26 @@ namespace olc {
 
                 // Return the target message so it can be "chained"
                 return msg;
+            }
+        };
+
+
+
+        // Forward declare the connnection
+        template <typename T>
+        class connection;
+
+
+        template <typename T>
+        struct owned_message {
+            
+            std::shared_ptr<connection<T>> remote = nullptr;
+            message<T> msg;
+
+            // Again, a friendly string maker
+            friend std::ostream& operator<<(std::ostream& os, const owned_message<T>& msg) {
+                os << msg.msg;
+                return os;
             }
         };
     }
