@@ -32,6 +32,8 @@ int main() {
     c.Connect("community.onelonecoder.com", 60000);
     c.FireBullet(2.0f, 5.0f);
     return 0;
+
+
     //olc::net::message<CustomMsgTypes> msg;
     //msg.header.id = CustomMsgTypes::FireBullet;
 
