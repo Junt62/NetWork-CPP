@@ -12,7 +12,6 @@ namespace olc {
 
         template<typename T>
         class server_interface {
-
         public:
             server_interface(uint16_t port)
                 : m_asioAcceptor(m_asioContext, boost::asio::ip::tcp::endpoint(
@@ -23,9 +22,8 @@ namespace olc {
             virtual ~server_interface() {
                 Stop();
             }
-
+            
             bool Start() {
-
                 try {
                     WaitForClientConnection();
                     

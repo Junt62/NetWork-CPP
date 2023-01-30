@@ -1,4 +1,5 @@
 #pragma once
+
 #include "net_common.h"
 
 
@@ -28,7 +29,7 @@ namespace olc {
             }
 
             // Adds an item to back of Queue
-            vois push_back(const T& item) {
+            void push_back(const T& item) {
                 std::scoped_lock lock(muxQueue);
                 deqQueue.emplace_back(std::move(item));
             }
@@ -56,6 +57,8 @@ namespace olc {
         protected:
             std::mutex muxQueue;
             std::deque<T> deqQueue;
+            std::condition_variable cvBlocking;
+            std::mutex muxBlocking;
         };
     }
 }
