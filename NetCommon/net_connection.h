@@ -80,6 +80,7 @@ namespace olc {
             // The "owner" decides how some of the connection behaves
             owner m_nOwnerType = owner::server;
             uint32_t id = 0;
+
         };
     }
 }

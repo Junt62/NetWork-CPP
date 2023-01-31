@@ -33,5 +33,5 @@
 /.vs
 /x64
 /Example/x64
-/NetServer/x64/Debug
-/NetCommon/x64/Debug
+/NetServer/x64
+/NetCommon/x64
