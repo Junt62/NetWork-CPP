@@ -81,6 +81,7 @@ namespace olc {
             owner m_nOwnerType = owner::server;
             uint32_t id = 0;
 
+
         };
     }
 }
