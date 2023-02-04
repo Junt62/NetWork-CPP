@@ -22,11 +22,11 @@ namespace olc {
             virtual ~server_interface() {
                 Stop();
             }
-            
+
             bool Start() {
                 try {
                     WaitForClientConnection();
-                    
+
                     m_threadContext = std::thread([this]() { m_asioContext.run(); });
                 }
                 catch (std::exception& e) {
@@ -91,21 +91,20 @@ namespace olc {
 
             // Send a message to a specific client
             void MessageClient(std::shared_ptr<connection<T>> client, const message<T>& msg) {
-                
+
                 if (client && client->IsConnected()) {
                     client->Send(msg);
                 }
                 else {
                     OnClientDisconnect(client);
                     client.reset();
-                    m_deqConnections.erase(
-                        std::remove(m_deqConnections.begin(), m_deqConnections.end(), client), m_deqConnections.end());
+                    m_deqConnections.erase(std::remove(m_deqConnections.begin(), m_deqConnections.end(), client), m_deqConnections.end());
                 }
             }
 
             // Send message to all clients
             void MessageAllClients(const message<T>& msg, std::shared_ptr<connection<T>> pIgnoreClient = nullptr) {
-                
+
                 bool bInvalidClientExists = false;
 
                 for (auto& client : m_deqConnections) {

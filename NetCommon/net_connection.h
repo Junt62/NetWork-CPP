@@ -29,13 +29,19 @@ namespace olc {
                 if (m_nOwnerType == owner::server) {
                     if (m_socket.is_open()) {
                         id = uid;
+                        ReadHeader();
                     }
                 }
             }
 
             bool ConnectToServer();
 
-            bool Disconnect();
+            bool Disconnect() {
+                if (IsConnected) {
+                    boost::asio::post(m_asioContext, [this]() { m_socket.close(); });
+                }
+
+            }
 
             bool IsConnected() const {
                 return m_socket.is_open();
@@ -43,11 +49,35 @@ namespace olc {
 
 
         public:
-            bool Send(const message<T>& msg);
+            bool Send(const message<T>& msg) {
+                boost::asio::post(m_asioContext, [this, msg]() {
+                    bool bWritingMessage = !m_qMessagesOut.empty();
+                m_qMessagesOut.push_back(msg);
+                if (!bWritingMessage) {
+                    WriteHeader();
+                }
+                    });
+            }
 
+        private:
             // ASYNC - Prime context ready to read a message header
             void ReadHeader() {
-
+                boost::asio::async_read(m_socket, boost::asio::buffer(&m_msgTemporaryIn.header, sizeof(message_header<T>)),
+                    [this](std::error_code ec, std::size_t length) {
+                        if (!ec) {
+                            if (m_msgTemporaryIn.header.size > 0) {
+                                m_msgTemporaryIn.body.resize(m_msgTemporaryIn.header.size);
+                                ReadBody();
+                            }
+                            else {
+                                AddToIncomingMessageQueue();
+                            }
+                        }
+                        else {
+                            std::cout << "[" << id << "] Read Header Fail.\n";
+                            m_socket.close();
+                        }
+                    });
             }
             // ASYNC - Prime context ready to read a message body
             void ReadBody() {
@@ -55,10 +85,55 @@ namespace olc {
 
             // ASYNC - Prime context to write a message header
             void WriteHeader() {
+                boost::asio::async_write(m_socket, boost::asio::buffer(&m_qMessagesOut.front().header, sizeof(message_header<T>)),
+                    [this](std::error_code ec, std::size_t length) {
+                        if (!ec) {
+                            if (m_qMessagesOut.front().body.size() > 0) {
+                                m_msgTemporaryIn.body.resize(m_msgTemporaryIn.header.size);
+                                WriteBody();
+                            }
+                            else {
+                                m_qMessagesOut.pop_front();
+
+                                if (!m_qMessagesOut.empty()) {
+                                    WriteHeader();
+                                }
+                            }
+                        }
+                        else {
+                            std::cout << "[" << id << "] Write Header Fail.\n";
+                            m_socket.close();
+                        }
+                    }
+                );
             }
 
             // ASYNC - Prime context to write a message body
             void WriteBody() {
+                boost::asio::async_write(m_socket, boost::asio::buffer(&m_qMessagesOut.front().body.data(), sizeof(message_header<T>)),
+                    [this](std::error_code ec, std::size_t length) {
+                        if (!ec) {
+                            m_qMessagesOut.pop_front();
+
+                            if (!m_qMessagesOut.empty()) {
+                                WriteHeader();
+                            }
+                        }
+                        else {
+                            std::cout << "[" << id << "] Write Body Fail.\n";
+                            m_socket.close();
+                        }
+                    });
+            }
+
+            void AddToIncomingMessageQueue() {
+                if (m_nOwnerType == owner::server)
+                    m_qMessagesIn.push_back({ this->shared_from_this(), m_msgTemporaryIn });
+                else
+                    m_qMessagesIn.push_back({ nullptr, m_msgTemporaryIn });
+
+                ReadHeader();
+
             }
 
         protected:
