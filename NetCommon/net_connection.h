@@ -44,6 +44,7 @@ namespace olc {
             }
 
 
+
             bool IsConnected() const {
                 return m_socket.is_open();
             }
