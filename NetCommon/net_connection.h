@@ -47,6 +47,8 @@ namespace olc {
 
             // 20230304
 
+            // 20230305
+
             bool IsConnected() const {
                 return m_socket.is_open();
             }
